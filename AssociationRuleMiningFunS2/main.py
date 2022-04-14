@@ -1,3 +1,5 @@
+import itertools
+
 header = ["level", "lang", "tweets", "phd", "interviewed_well"]
 table = [
         ["Senior", "Java", "no", "no", "False"],
@@ -67,4 +69,88 @@ for row in table:
 # IF interviewed_well=False THEN tweets=no
 rule1 = {"lhs": ["interviewed_well=False"], "rhs": ["tweets=no"]}
 # task: create rule5
-rule5 = {"lhs": ["phd=no", "tweets=yes"], "rhs": ["interviwed_well=True"]}
+rule5 = {"lhs": ["phd=no", "tweets=yes"], "rhs": ["interviewed_well=True"]}
+
+# utility function
+def check_row_match(terms, row):
+    # return 1 if all the terms are in the row
+    # 0 otherwise
+    for term in terms:
+        if term not in row:
+            return 0
+    return 1
+
+# lab task #2
+def compute_rule_counts(rule, table):
+    Nleft = Nright = Nboth = Ntotal = 0
+    for row in table:
+        Nleft += check_row_match(rule["lhs"], row)
+        Nright += check_row_match(rule["rhs"], row)
+        Nboth += check_row_match(rule["lhs"] + rule["rhs"], row)
+        Ntotal += 1
+    return Nleft, Nright, Nboth, Ntotal
+
+Nleft, Nright, Nboth, Ntotal = compute_rule_counts(rule1, table)
+print(Nleft, Nright, Nboth, Ntotal)
+
+# lab task #3
+def compute_rule_interestingness(rule, table):
+    Nleft, Nright, Nboth, Ntotal = compute_rule_counts(rule, table)
+
+    rule["confidence"] = Nboth / Nleft
+    rule["support"] = Nboth / Ntotal
+    rule["completeness"] = Nboth / Nright
+    # NOTE: denominators could be 0
+
+for rule in [rule1, rule5]:
+    compute_rule_interestingness(rule, table)
+    print(rule)
+
+# set theory basics and implementation in Python
+# set: an unordered collection with no duplicates
+# there is a built in set type in python
+transaction = ["apples", "apples", "coffee", "batteries"]
+transaction_set = set(transaction)
+print("set:", transaction_set)
+# note there are no duplicates and order is lost
+transaction = sorted(list(transaction_set))
+print("list:", transaction)
+
+# A union B: the set of all items in A or B or both
+# A instersect B: the set of all items in both A and B
+# there are both union() and intersection() from set type
+# transaction_set.
+
+# suppose we an LHS and an RHS (lists or sets)
+# LHS intersect RHS should be empty set (0)
+# LHS union RHS
+# sorted(LHS + RHS) OR LHS.union(RHS)
+# apriori needs union
+
+# A is a subset of B if all the items in A are 
+# also in B
+# check_row_match(A, B) returns 1 if A is a subset of B
+
+# powerset of A is the set of all subsets of A
+# (including 0 and A itself)
+# task: on paper, calculate the powerset of transaction
+powerset = []
+for i in range(0, len(transaction) + 1):
+    # i is the size of the subsets
+    powerset.extend(itertools.combinations(transaction, i))
+print(powerset)
+
+# intro to market basket analysis (MBA)
+# associations between produces customers
+# buy together
+# IF {"milk=true", "sugar=true"} THEN {"eggs=true"}
+# we are only interested in products purchased 
+# (e.g. =true), not products not purchased (e.g. =false)
+# shorthand, drop =true
+# IF {"milk", "sugar"} THEN {"eggs"}
+# {"milk", "sugar"} -> {"eggs"}
+# terminology: 
+# a row in our dataset is a "transaction"
+# transactions are "itemsets"
+
+# apriori lab
